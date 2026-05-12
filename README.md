@@ -1,4 +1,4 @@
-# LLM Visualizer
+# LLM SAE Visualizer
 
 An interactive interpretability tool for **Gemma 2** models. It runs a forward pass, encodes residual-stream activations through **GemmaScope Sparse Autoencoders (SAEs)**, and renders the result as an interactive graph — showing which SAE features activate per token, their top vocabulary projections, and next-token predictions. Feature descriptions are fetched on demand from [Neuronpedia](https://www.neuronpedia.org).
 
