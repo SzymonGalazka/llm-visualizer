@@ -26,7 +26,7 @@ export function ControlPanel({
   currentModel,
   modelReady,
 }: Props) {
-  const [text, setText] = useState("Ala ma kota");
+  const [text, setText] = useState("Orange man - common nickname for");
   const [layer, setLayer] = useState(availableLayers[0] ?? 9);
   const [topKFeatures, setTopKFeatures] = useState(5);
   const [topKConcepts, setTopKConcepts] = useState(3);
@@ -118,7 +118,7 @@ export function ControlPanel({
           <input
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="e.g. Ala ma kota"
+            placeholder="e.g. This is my favorite"
             style={inputStyle}
           />
         </div>
