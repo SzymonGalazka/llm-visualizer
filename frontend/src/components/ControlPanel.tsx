@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { Search, Layers, SlidersHorizontal } from "lucide-react";
 
 interface Props {
@@ -9,16 +9,35 @@ interface Props {
     topKConcepts: number;
     threshold: number;
   }) => void;
+  onModelSwitch: (model: string) => void;
   loading: boolean;
   availableLayers: number[];
+  availableModels: string[];
+  currentModel: string | null;
+  modelReady: boolean;
 }
 
-export function ControlPanel({ onAnalyze, loading, availableLayers }: Props) {
+export function ControlPanel({
+  onAnalyze,
+  onModelSwitch,
+  loading,
+  availableLayers,
+  availableModels,
+  currentModel,
+  modelReady,
+}: Props) {
   const [text, setText] = useState("Ala ma kota");
   const [layer, setLayer] = useState(availableLayers[0] ?? 9);
   const [topKFeatures, setTopKFeatures] = useState(5);
   const [topKConcepts, setTopKConcepts] = useState(3);
   const [threshold, setThreshold] = useState(0.0);
+
+  // Reset layer selection when available layers change (e.g. after model switch).
+  useEffect(() => {
+    if (!availableLayers.includes(layer)) {
+      setLayer(availableLayers[0] ?? 9);
+    }
+  }, [availableLayers]);
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -57,9 +76,35 @@ export function ControlPanel({ onAnalyze, loading, availableLayers }: Props) {
       >
         LLM Visualizer
       </h2>
-      <p style={{ color: "#6b7280", fontSize: 11, margin: 0 }}>
-        Gemma 2 9B IT · Gemma Scope SAEs
-      </p>
+
+      {/* Model selector */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <label style={labelStyle}>Model</label>
+        <select
+          value={currentModel ?? ""}
+          disabled={!modelReady || loading}
+          onChange={(e) => onModelSwitch(e.target.value)}
+          style={{
+            background: "#1f2937",
+            border: "1px solid #374151",
+            borderRadius: 6,
+            color: modelReady ? "#f9fafb" : "#6b7280",
+            fontSize: 12,
+            padding: "6px 8px",
+            cursor: modelReady && !loading ? "pointer" : "not-allowed",
+            width: "100%",
+          }}
+        >
+          {availableModels.map((m) => (
+            <option key={m} value={m}>
+              {m}
+            </option>
+          ))}
+        </select>
+        <p style={{ color: "#6b7280", fontSize: 10, margin: 0 }}>
+          Gemma Scope SAEs · switching reloads model
+        </p>
+      </div>
 
       <form
         onSubmit={handleSubmit}

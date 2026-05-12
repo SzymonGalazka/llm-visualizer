@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import {
   ReactFlow,
   Background,
@@ -106,7 +106,7 @@ export function GraphView({ rawNodes, rawEdges, onNodeClick }: Props) {
   const [edges, setEdges, onEdgesChange] = useEdgesState(layoutEdges);
 
   // Sync when new data arrives
-  useMemo(() => {
+  useEffect(() => {
     setNodes(layoutNodes);
     setEdges(layoutEdges);
   }, [layoutNodes, layoutEdges, setNodes, setEdges]);

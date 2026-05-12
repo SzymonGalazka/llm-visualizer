@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import type { TokenNodeData } from "../../types";
+import { formatToken } from "../../utils/token";
 
 export const TokenNode = memo(function TokenNode({
   data,
@@ -28,7 +29,7 @@ export const TokenNode = memo(function TokenNode({
           letterSpacing: 0.5,
         }}
       >
-        {d.label}
+        {formatToken(d.label)}
       </span>
       <Handle
         type="source"

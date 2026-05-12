@@ -8,8 +8,16 @@ import { useGraphData } from "./hooks/useGraphData";
 import type { AppNodeData } from "./types";
 
 export default function App() {
-  const { nodes, edges, predictions, loading, error, status, analyze } =
-    useGraphData();
+  const {
+    nodes,
+    edges,
+    predictions,
+    loading,
+    error,
+    status,
+    analyze,
+    switchModel,
+  } = useGraphData();
   const [selectedNode, setSelectedNode] = useState<AppNodeData | null>(null);
   const [analyzedText, setAnalyzedText] = useState("");
 
@@ -29,6 +37,11 @@ export default function App() {
   );
 
   const availableLayers = status?.available_layers ?? [9, 20, 31];
+  const availableModels = status?.available_models ?? [
+    "gemma-2-2b",
+    "gemma-2-9b-it",
+  ];
+  const currentModel = status?.model ?? null;
   const modelReady = status?.loaded ?? false;
 
   return (
@@ -42,8 +55,12 @@ export default function App() {
     >
       <ControlPanel
         onAnalyze={handleAnalyze}
+        onModelSwitch={switchModel}
         loading={loading}
         availableLayers={availableLayers}
+        availableModels={availableModels}
+        currentModel={currentModel}
+        modelReady={modelReady}
       />
 
       <main style={{ flex: 1, position: "relative", overflow: "hidden" }}>

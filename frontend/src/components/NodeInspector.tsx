@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { ExternalLink, X, Zap, TrendingDown, Info } from "lucide-react";
 import { api } from "../api";
 import type { AppNodeData, FeatureDetail, FeatureNodeData } from "../types";
+import { formatToken } from "../utils/token";
 
 interface Props {
   nodeData: AppNodeData | null;
@@ -69,7 +70,7 @@ export function NodeInspector({ nodeData, onClose }: Props) {
       {nodeData.nodeType === "token" && (
         <div>
           <div style={{ color: "#bfdbfe", fontSize: 22, fontWeight: 700 }}>
-            {nodeData.label}
+            {formatToken(nodeData.label)}
           </div>
           <div style={{ color: "#6b7280", fontSize: 12, marginTop: 4 }}>
             Position {nodeData.pos}
@@ -81,7 +82,7 @@ export function NodeInspector({ nodeData, onClose }: Props) {
       {nodeData.nodeType === "concept" && (
         <div>
           <div style={{ color: "#bbf7d0", fontSize: 22, fontWeight: 700 }}>
-            {nodeData.label}
+            {formatToken(nodeData.label)}
           </div>
           <div style={{ color: "#6b7280", fontSize: 12, marginTop: 4 }}>
             Vocab index {nodeData.vocab_idx}
@@ -138,7 +139,14 @@ export function NodeInspector({ nodeData, onClose }: Props) {
               {detail.activations.slice(0, 2).map((act, i) => (
                 <div key={i}>
                   <div
-                    style={{ color: "#6b7280", fontSize: 11, marginBottom: 4, display: "flex", alignItems: "center", gap: 4 }}
+                    style={{
+                      color: "#6b7280",
+                      fontSize: 11,
+                      marginBottom: 4,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4,
+                    }}
                   >
                     Example {i + 1}
                     <InfoTooltip text="A real sentence from the training corpus where this feature had a high activation. Token brightness indicates activation strength." />
@@ -159,7 +167,7 @@ export function NodeInspector({ nodeData, onClose }: Props) {
                           fontFamily: "monospace",
                         }}
                       >
-                        {tok}
+                        {formatToken(tok)}
                       </span>
                     ))}
                   </div>
@@ -224,7 +232,12 @@ function InfoTooltip({ text }: { text: string }) {
   return (
     <span
       ref={ref}
-      style={{ position: "relative", display: "inline-flex", alignItems: "center", cursor: "default" }}
+      style={{
+        position: "relative",
+        display: "inline-flex",
+        alignItems: "center",
+        cursor: "default",
+      }}
       onMouseEnter={() => setVisible(true)}
       onMouseLeave={() => setVisible(false)}
     >
@@ -296,7 +309,7 @@ function TokenExamples({
               fontFamily: "monospace",
             }}
           >
-            {t}
+            {formatToken(t)}
           </span>
         ))}
       </div>

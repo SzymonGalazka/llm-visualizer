@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
-from routers import analyze, features, status
+from routers import analyze, features, status, models
 from model_service import ModelService
 
 load_dotenv()
@@ -40,3 +40,4 @@ app.add_middleware(
 app.include_router(status.router, prefix="/api")
 app.include_router(analyze.router, prefix="/api")
 app.include_router(features.router, prefix="/api")
+app.include_router(models.router, prefix="/api")

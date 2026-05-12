@@ -27,6 +27,9 @@ export function useGraphData() {
     status: null,
   });
 
+  // Incrementing this key restarts the polling effect (e.g. after a model switch).
+  const [pollKey, setPollKey] = useState(0);
+
   // Poll status until model is loaded
   useEffect(() => {
     let cancelled = false;
@@ -48,6 +51,19 @@ export function useGraphData() {
     return () => {
       cancelled = true;
     };
+  }, [pollKey]);
+
+  const switchModel = useCallback(async (model: string) => {
+    setState((prev) => ({
+      ...prev,
+      nodes: [],
+      edges: [],
+      predictions: [],
+      error: null,
+    }));
+    await api.switchModel(model);
+    // Restart polling — the new model will be loaded: false until ready.
+    setPollKey((k) => k + 1);
   }, []);
 
   const analyze = useCallback(
@@ -88,5 +104,5 @@ export function useGraphData() {
     [],
   );
 
-  return { ...state, analyze };
+  return { ...state, analyze, switchModel };
 }

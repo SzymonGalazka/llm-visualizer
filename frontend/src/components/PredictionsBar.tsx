@@ -1,4 +1,5 @@
 import type { NextTokenPrediction } from "../types";
+import { formatToken } from "../utils/token";
 
 interface Props {
   predictions: NextTokenPrediction[];
@@ -64,7 +65,7 @@ export function PredictionsBar({ predictions, text }: Props) {
                 whiteSpace: "nowrap",
               }}
             >
-              {p.token || "·"}
+              {formatToken(p.token) || "·"}
             </span>
             {/* probability bar */}
             <div

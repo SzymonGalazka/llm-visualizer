@@ -71,8 +71,9 @@ export interface NextTokenPrediction {
 
 export interface StatusResponse {
   loaded: boolean;
-  model: string;
+  model: string | null;
   available_layers: number[];
+  available_models: string[];
 }
 
 export interface FeatureDetail {

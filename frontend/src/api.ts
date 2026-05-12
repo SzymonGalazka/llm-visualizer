@@ -32,4 +32,12 @@ export const api = {
   feature(layer: number, index: number): Promise<FeatureDetail> {
     return request<FeatureDetail>(`/feature/${layer}/${index}`);
   },
+
+  switchModel(model: string): Promise<{ status: string; model: string }> {
+    return request<{ status: string; model: string }>("/switch-model", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ model }),
+    });
+  },
 };

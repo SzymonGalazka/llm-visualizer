@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import type { ConceptNodeData } from "../../types";
+import { formatToken } from "../../utils/token";
 
 export const ConceptNode = memo(function ConceptNode({
   data,
@@ -21,7 +22,7 @@ export const ConceptNode = memo(function ConceptNode({
       }}
     >
       <div style={{ color: "#bbf7d0", fontSize: 14, fontWeight: 600 }}>
-        {d.label}
+        {formatToken(d.label)}
       </div>
       <div
         style={{

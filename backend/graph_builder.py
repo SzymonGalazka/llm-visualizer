@@ -19,6 +19,7 @@ def build_graph(analysis: dict[str, Any]) -> dict[str, Any]:
     edges: list[dict[str, Any]] = []
     seen_features: dict[int, str] = {}   # feat_idx → node_id (deduplicate shared features)
     seen_concepts: dict[str, str] = {}   # concept_token → node_id
+    seen_edges: set[str] = set()         # edge_id → deduplicate repeated feature→concept edges
 
     for token_item in analysis["token_data"]:
         token_str: str = token_item["token"]
@@ -99,14 +100,17 @@ def build_graph(analysis: dict[str, Any]) -> dict[str, Any]:
                 else:
                     concept_node_id = seen_concepts[concept_key]
 
-                edges.append(
-                    {
-                        "id": f"e_{feat_node_id}_{concept_node_id}",
-                        "source": feat_node_id,
-                        "target": concept_node_id,
-                        "data": {"weight": max(0.0, float(score))},
-                        "type": "default",
-                    }
-                )
+                edge_id = f"e_{feat_node_id}_{concept_node_id}"
+                if edge_id not in seen_edges:
+                    seen_edges.add(edge_id)
+                    edges.append(
+                        {
+                            "id": edge_id,
+                            "source": feat_node_id,
+                            "target": concept_node_id,
+                            "data": {"weight": max(0.0, float(score))},
+                            "type": "default",
+                        }
+                    )
 
     return {"nodes": nodes, "edges": edges}

@@ -13,21 +13,32 @@ from sae_lens import SAE
 
 logger = logging.getLogger(__name__)
 
-AVAILABLE_LAYERS = [9, 20, 31]
-SAE_RELEASE = "gemma-scope-9b-it-res-canonical"
-SAE_WIDTH = "16k"
-MODEL_NAME = "gemma-2-9b-it"
-
-LAYER_KEYS = {
-    layer: f"{layer}-gemmascope-res-{SAE_WIDTH}" for layer in AVAILABLE_LAYERS
+# Per-model configuration — add new entries here to expose more choices.
+# Note: Gemma Scope only covers gemma-2-2b (PT), not the IT variant.
+MODEL_CONFIGS: dict[str, dict] = {
+    "gemma-2-9b-it": {
+        "sae_release": "gemma-scope-9b-it-res-canonical",
+        "available_layers": [9, 20, 31],
+        "sae_width": "16k",
+    },
+    "gemma-2-2b": {
+        "sae_release": "gemma-scope-2b-pt-res-canonical",
+        "available_layers": [5, 12, 20],
+        "sae_width": "16k",
+    },
 }
+
+AVAILABLE_MODELS: list[str] = list(MODEL_CONFIGS.keys())
+DEFAULT_MODEL = "gemma-2-2b"
 
 
 class ModelService:
-    def __init__(self) -> None:
+    def __init__(self, model_name: str = DEFAULT_MODEL) -> None:
         self.model: HookedTransformer | None = None
         self.saes: dict[int, SAE] = {}
         self._loaded = False
+
+        self._apply_config(model_name)
 
         # Detect best available device
         if torch.backends.mps.is_available():
@@ -38,6 +49,19 @@ class ModelService:
             self.device = "cpu"
         logger.info(f"Using device: {self.device}")
 
+    def _apply_config(self, model_name: str) -> None:
+        if model_name not in MODEL_CONFIGS:
+            raise ValueError(f"Unknown model '{model_name}'. Available: {AVAILABLE_MODELS}")
+        cfg = MODEL_CONFIGS[model_name]
+        self.model_name = model_name
+        self.sae_release = cfg["sae_release"]
+        self.sae_width = cfg["sae_width"]
+        self.available_layers: list[int] = cfg["available_layers"]
+        self.layer_keys: dict[int, str] = {
+            layer: f"{layer}-gemmascope-res-{self.sae_width}"
+            for layer in self.available_layers
+        }
+
     @property
     def loaded(self) -> bool:
         return self._loaded
@@ -46,25 +70,46 @@ class ModelService:
         loop = asyncio.get_event_loop()
         await loop.run_in_executor(None, self._load_sync)
 
+    async def switch_to(self, model_name: str) -> None:
+        """Unload the current model and load a different one."""
+        if model_name not in MODEL_CONFIGS:
+            raise ValueError(f"Unknown model '{model_name}'. Available: {AVAILABLE_MODELS}")
+        if model_name == self.model_name and self._loaded:
+            return  # already loaded, nothing to do
+
+        logger.info(f"Switching model: {self.model_name} → {model_name}")
+        self._loaded = False
+        self.model = None
+        self.saes = {}
+
+        # Release device memory where possible
+        if torch.backends.mps.is_available():
+            torch.mps.empty_cache()
+        elif torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+        self._apply_config(model_name)
+        await self.load()
+
     def _load_sync(self) -> None:
         hf_token = os.getenv("HF_TOKEN") or None
         if hf_token:
             import huggingface_hub
             huggingface_hub.login(token=hf_token, add_to_git_credential=False)
 
-        logger.info(f"Loading {MODEL_NAME} in bfloat16 on {self.device}...")
+        logger.info(f"Loading {self.model_name} in bfloat16 on {self.device}...")
         self.model = HookedTransformer.from_pretrained_no_processing(
-            MODEL_NAME,
+            self.model_name,
             device=self.device,
             dtype=torch.bfloat16,
         )
         self.model.eval()
 
-        for layer in AVAILABLE_LAYERS:
-            sae_id = f"layer_{layer}/width_{SAE_WIDTH}/canonical"
+        for layer in self.available_layers:
+            sae_id = f"layer_{layer}/width_{self.sae_width}/canonical"
             logger.info(f"Loading SAE for layer {layer} ({sae_id})...")
             sae, _cfg, _log_sparsities = SAE.from_pretrained(
-                release=SAE_RELEASE,
+                release=self.sae_release,
                 sae_id=sae_id,
                 device=self.device,
             )
@@ -148,6 +193,8 @@ class ModelService:
                     topk_concepts.indices.tolist(), topk_concepts.values.tolist()
                 ):
                     concept_token = self.model.tokenizer.decode([vocab_idx]).strip()
+                    if not concept_token:
+                        continue
                     concepts.append({"token": concept_token, "vocab_idx": vocab_idx, "score": float(concept_score)})
 
                 features.append(
@@ -155,7 +202,7 @@ class ModelService:
                         "feat_idx": int(feat_idx),
                         "activation": float(feat_val),
                         "layer": layer,
-                        "layer_key": LAYER_KEYS[layer],
+                        "layer_key": self.layer_keys[layer],
                         "concepts": concepts,
                     }
                 )
