@@ -9,6 +9,15 @@ if [ ! -f .env ]; then
   echo "Edit backend/.env and add your HF_TOKEN and NEURONPEDIA_API_KEY"
 fi
 
+# Create virtual environment if it doesn't exist
+if [ ! -d .venv ]; then
+  echo "Creating virtual environment..."
+  python3 -m venv .venv
+fi
+
+# Activate virtual environment
+source .venv/bin/activate
+
 if ! python -c "import transformer_lens" 2>/dev/null; then
   echo "Installing Python dependencies..."
   pip install -r requirements.txt
